@@ -1,5 +1,5 @@
-# RLBotPythonExample
-Example of a python bot using the RLBot framework
+# Dropshot Dragon
+A Rocket League bot for Dropshot made with the [RLBot framework](rlbot.org) for offline play.
 
 ## Installation
 
@@ -17,9 +17,7 @@ https://www.youtube.com/watch?v=UjsQFNN0nSA
 3. In the files from the previous step, find and double click on run-gui.bat
 4. Click the 'Run' button
 
-## Changing the bot
+## Help
 
-- Bot behavior is controlled by `python_example/python_example.py`
-- Bot appearance is controlled by `python_example/appearance.cfg`
-
-See https://github.com/RLBot/RLBotPythonExample/wiki for documentation and tutorials.
+- See https://github.com/RLBot/RLBotPythonExample/wiki for framework documentation and tutorials.
+- See https://github.com/RLBot/RLBot/wiki/Dropshot for useful info about Dropshot.
