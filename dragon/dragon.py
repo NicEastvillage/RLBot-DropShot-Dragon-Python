@@ -9,14 +9,15 @@ from RLUtilities.GameInfo import *
 from RLUtilities.Simulation import *
 from RLUtilities.LinearAlgebra import *
 
+from dropshot import DropshotInfo
+
+
 class Dragon(BaseAgent):
 
     def __init__(self, name, team, index):
-        self.info = GameInfo(index, team)
+        self.info = DropshotInfo(index, team)
         self.controls = SimpleControllerState()
-        self.kickoff = False
         self.action = None
-        self.ball_predictions = []
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         self.info.read_packet(packet)
@@ -27,3 +28,16 @@ class Dragon(BaseAgent):
             self.action.target_pos = self.info.ball.pos
         self.action.step(0.01666)
         return self.action.controls
+
+
+def draw_tiles(renderer, info):
+    blue = renderer.create_color(255, 80, 170, 255)
+    orange = renderer.create_color(255, 255, 170, 30)
+    red = renderer.create_color(255, 255, 30, 80)
+
+    for tile in info.tile_list:
+        if tile.team == 1:
+            color = blue if tile.team == 0 else orange
+            if tile.state == tile.OPEN:
+                color = red
+            renderer.draw_rect_3d(tile.location, 10, 10, tile.state == tile.FILLED, color)
