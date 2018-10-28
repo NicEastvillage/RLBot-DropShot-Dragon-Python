@@ -81,6 +81,9 @@ class Hex:
     def __ne__(self, other):
         return self.q != other.q and self.r != other.r
 
+    def __hash__(self):
+        return hash(str(self))
+
 
 def hex_from_rounding(fq, fr):
     """ Construct a Hex from rounding two floating point q and r coordinates. """
