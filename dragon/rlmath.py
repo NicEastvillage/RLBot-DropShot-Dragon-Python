@@ -26,7 +26,6 @@ def sign(value):
 
 
 # A Hex coordinate. Works a lot like a vector, but the axis are q, r, and s with the constraint q + r + s = 0.
-# See arena.hex_directions for more about the axis.
 # Read more about axial coordinates here: https://www.redblobgames.com/grids/hexagons/
 class Hex:
     def __init__(self, q=0, r=0):
@@ -83,6 +82,14 @@ class Hex:
 
     def __hash__(self):
         return hash(str(self))
+
+
+TILE_E = Hex(0, 1)
+TILE_NE = Hex(1, 0)
+TILE_NW = Hex(1, -1)
+TILE_W = Hex(0, -1)
+TILE_SW = Hex(-1, 0)
+TILE_SE = Hex(-1, 1)
 
 
 def hex_from_rounding(fq, fr):

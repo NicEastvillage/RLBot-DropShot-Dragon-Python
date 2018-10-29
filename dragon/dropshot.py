@@ -1,6 +1,13 @@
+import math
 
 from RLUtilities.GameInfo import *
-from tile import ALL_TILES
+from tiles import ALL_TILES
+
+
+TO_WALL = 4555
+TO_CORNER = 2 * TO_WALL / math.sqrt(3)
+TO_CORNER_ROUNDED = 5026
+HEIGHT = 2018
 
 
 class DropshotInfo(GameInfo):

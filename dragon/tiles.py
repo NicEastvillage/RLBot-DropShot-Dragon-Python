@@ -1,7 +1,19 @@
+import math
 
+import rlmath
 from rlmath import Hex
 
 from RLUtilities.LinearAlgebra import vec3
+
+
+TILE_WIDTH = 768
+TILE_SIZE = TILE_WIDTH / math.sqrt(3)
+TILE_HEIGHT = TILE_SIZE * 2
+TILE_COUNT = 140
+
+MIDDLE_OFFSET = 128
+Q_VEC = vec3(-TILE_WIDTH, 0, 0)
+R_VEC = vec3(-TILE_WIDTH / 2, 0.75 * TILE_HEIGHT, 0)
 
 
 class Tile:
@@ -16,6 +28,23 @@ class Tile:
         self.hex = hex
         self.team = team
         self.state = Tile.UNKNOWN
+
+
+def point_to_tile(info, point):
+    if point[1] > 0:
+        point = point - vec3(0, MIDDLE_OFFSET, 0)
+    else:
+        point = point - vec3(0, -MIDDLE_OFFSET, 0)
+    hex = point_to_hex(point)
+    if hex in info.tile_dict:
+        return info.tile_dict[hex]
+    return None
+
+
+def point_to_hex(point):
+    q = -point[0] / TILE_WIDTH - point[1] * 2 / (3 * TILE_HEIGHT)
+    r = point[1] * 4 / (3 * TILE_HEIGHT)
+    return rlmath.hex_from_rounding(q, r)
 
 
 ALL_TILES = [
