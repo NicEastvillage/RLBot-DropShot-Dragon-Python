@@ -10,8 +10,7 @@ from RLUtilities.Simulation import *
 from RLUtilities.LinearAlgebra import *
 
 import renderhelp
-import tiles
-from dropshot import DropshotInfo
+from dropshot import *
 
 
 class Dragon(BaseAgent):
@@ -34,8 +33,15 @@ class Dragon(BaseAgent):
         self.action.step(0.01666)
 
         if self.team == 0:
+            prediction = DropshotBall(self.info.ball)
+            ball_predictions = [vec3(prediction.pos)]
+            
+            for i in range(150):
+                prediction.step_ds(1./15)
+                ball_predictions.append(vec3(prediction.pos))
+
             self.renderer.begin_rendering()
-            draw_all_positions(self.renderer, self.info)
+            self.renderer.draw_polyline_3d(ball_predictions, self.renderer.red())
             self.renderer.end_rendering()
 
         return self.action.controls
