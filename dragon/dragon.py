@@ -11,6 +11,7 @@ from RLUtilities.LinearAlgebra import *
 
 import renderhelp
 from dropshot import *
+from usystem import UtilitySystem, AtbaChoice
 
 
 class Dragon(BaseAgent):
@@ -21,50 +22,61 @@ class Dragon(BaseAgent):
         self.index = index
         self.info = DropshotInfo(index, team)
         self.controls = SimpleControllerState()
+        self.plan = None
         self.action = None
+        self.ut = UtilitySystem([AtbaChoice()])
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         self.info.read_packet(packet)
+        self.renderer.begin_rendering()
 
-        if self.action == None or self.action.finished:
-            self.action = Drive(self.info.my_car, self.info.ball.pos, 2300)
+        if self.plan == None or self.plan.finished:
+            self.plan = None
+            choice, score = self.ut.evaluate(self)
+            choice.execute(self)
+            if self.plan != None:
+                self.ut.reset()
         else:
-            self.action.target_pos = self.info.ball.pos
-        self.action.step(0.01666)
+            self.plan.execute(self)
 
         if self.team == 0:
-            prediction = DropshotBall(self.info.ball)
-            ball_predictions = [vec3(prediction.pos)]
-            
-            for i in range(150):
-                prediction.step_ds(1./15)
-                ball_predictions.append(vec3(prediction.pos))
+            draw_ball_trajectory(self)
 
-            self.renderer.begin_rendering()
-            self.renderer.draw_polyline_3d(ball_predictions, self.renderer.red())
-            self.renderer.end_rendering()
+        self.info.my_car.last_input.roll = self.controls.roll
+        self.info.my_car.last_input.pitch = self.controls.pitch
+        self.info.my_car.last_input.yaw = self.controls.yaw
 
+        self.renderer.end_rendering()
         return self.action.controls
 
 
-def draw_tiles(renderer, info):
-    blue = renderer.create_color(255, 80, 170, 255)
-    orange = renderer.create_color(255, 255, 170, 30)
-    red = renderer.create_color(255, 255, 30, 80)
+def draw_ball_trajectory(bot):
+    prediction = DropshotBall(bot.info.ball)
+    ball_predictions = [vec3(prediction.pos)]
+    for i in range(150):
+        prediction.step_ds(1. / 30)
+        ball_predictions.append(vec3(prediction.pos))
+    bot.renderer.draw_polyline_3d(ball_predictions, bot.renderer.red())
 
-    for tile in info.tile_list:
+
+def draw_tiles(bot):
+    blue = bot.renderer.create_color(255, 80, 170, 255)
+    orange = bot.renderer.create_color(255, 255, 170, 30)
+    red = bot.renderer.create_color(255, 255, 30, 80)
+
+    for tile in bot.info.tile_list:
         if tile.team == 1:
             color = blue if tile.team == 0 else orange
             if tile.state == tile.OPEN:
                 color = red
-            renderer.draw_rect_3d(tile.location, 10, 10, tile.state == tile.FILLED, color)
+                bot.renderer.draw_rect_3d(tile.location, 10, 10, tile.state == tile.FILLED, color)
 
 
-def draw_all_positions(renderer, info):
-    blue = renderer.create_color(255, 80, 170, 255)
-    orange = renderer.create_color(255, 255, 170, 30)
-    for car in info.cars:
+def draw_all_positions(bot):
+    blue = bot.renderer.create_color(255, 80, 170, 255)
+    orange = bot.renderer.create_color(255, 255, 170, 30)
+    for car in bot.info.cars:
         color = blue if car.team == 0 else orange
-        renderhelp.highlight_point_on_tile(renderer, info, car.pos, color)
-    red = renderer.create_color(255, 255, 30, 80)
-    renderhelp.highlight_point_on_tile(renderer, info, info.ball.pos, red)
+        renderhelp.highlight_point_on_tile(bot.renderer, bot.info, car.pos, color)
+    red = bot.renderer.create_color(255, 255, 30, 80)
+    renderhelp.highlight_point_on_tile(bot.renderer, bot.info, bot.info.ball.pos, red)
