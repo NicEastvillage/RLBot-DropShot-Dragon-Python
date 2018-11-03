@@ -11,6 +11,7 @@ from RLUtilities.LinearAlgebra import *
 
 import renderhelp
 from dropshot import *
+from plan import KickoffPlan
 from usystem import UtilitySystem, AtbaChoice
 
 
@@ -23,6 +24,7 @@ class Dragon(BaseAgent):
         self.info = DropshotInfo(index, team)
         self.controls = SimpleControllerState()
         self.plan = None
+        self.doing_kickoff = False
         self.action = None
         self.ut = UtilitySystem([AtbaChoice()])
 
@@ -30,8 +32,16 @@ class Dragon(BaseAgent):
         self.info.read_packet(packet)
         self.renderer.begin_rendering()
 
+        # Check kickoff
+
+        if self.info.is_kickoff and not self.doing_kickoff:
+            self.plan = KickoffPlan(self)
+            self.doing_kickoff = True
+
+        # Execute logic
         if self.plan == None or self.plan.finished:
             self.plan = None
+            self.doing_kickoff = False
             choice, score = self.ut.evaluate(self)
             choice.execute(self)
             if self.plan != None:
@@ -39,15 +49,18 @@ class Dragon(BaseAgent):
         else:
             self.plan.execute(self)
 
+        # Rendering
         if self.team == 0:
             draw_ball_trajectory(self)
 
+        # Save for next frame
         self.info.my_car.last_input.roll = self.controls.roll
         self.info.my_car.last_input.pitch = self.controls.pitch
         self.info.my_car.last_input.yaw = self.controls.yaw
+        self.info.my_car.last_input.boost = self.controls.boost
 
         self.renderer.end_rendering()
-        return self.action.controls
+        return self.controls
 
 
 def draw_ball_trajectory(bot):
