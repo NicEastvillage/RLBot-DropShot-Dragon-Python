@@ -43,6 +43,7 @@ class AtbaChoice:
     def execute(self, bot):
         if self.drive == None:
             self.drive = Drive(bot.info.my_car, bot.info.ball.pos, 1410)
+        self.drive.target_pos = bot.info.ball.pos
         bot.action = self.drive
         bot.action.step(0.01666)
         bot.controls = bot.action.controls

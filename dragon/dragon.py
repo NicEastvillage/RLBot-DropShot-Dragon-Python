@@ -33,9 +33,8 @@ class Dragon(BaseAgent):
         self.renderer.begin_rendering()
 
         # Check kickoff
-
         if self.info.is_kickoff and not self.doing_kickoff:
-            self.plan = KickoffPlan(self)
+            self.plan = KickoffPlan()
             self.doing_kickoff = True
 
         # Execute logic

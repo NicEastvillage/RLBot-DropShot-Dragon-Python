@@ -28,7 +28,7 @@ class KickoffPlan:
     DRIVE = 0
     AERIAL = 1
 
-    def __init__(self, bot):
+    def __init__(self):
         self.state = KickoffPlan.DRIVE
         self.action = None
         self.finished = False
@@ -40,7 +40,6 @@ class KickoffPlan:
 
         self.action.step(0.016666)
         dist = norm(bot.info.my_car.pos)
-
 
         if dist < 2600 and self.state == KickoffPlan.DRIVE:
             self.state = KickoffPlan.AERIAL
