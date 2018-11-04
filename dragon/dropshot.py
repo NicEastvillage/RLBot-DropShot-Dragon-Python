@@ -29,6 +29,9 @@ class DropshotInfo(GameInfo):
 
         self.is_kickoff = packet.game_info.is_kickoff_pause
 
+        self.ball = DropshotBall(self.ball)
+        self.ball.read_packet(packet)
+
         for i in range(packet.num_tiles):
             self.tile_list[i].state = packet.dropshot_tiles[i].tile_state
 
@@ -37,8 +40,30 @@ class DropshotBall(Ball):
 
     RADIUS = 104.0
 
+    NORMAL = 0
+    CHARGED = 1
+    SUPER_CHARGED = 2
+
     def __init__(self, ball):
         super().__init__(ball)
+
+        self.damage_index = DropshotBall.NORMAL
+        self.energy = 0
+        self.energy_accum_recent = 0
+        self.team = 0
+
+    def read_packet(self, packet):
+        ds = packet.game_ball.drop_shot_info
+        self.damage_index = ds.damage_index
+        self.energy = ds.absorbed_force
+        self.energy_accum_recent = ds.force_accum_recent
+
+        latest_toucher = packet.game_ball.latest_touch.player_name
+        for i in range(packet.num_cars):
+            car = packet.game_cars[i]
+            if car.name == latest_toucher:
+                self.team = car.team
+                break
 
     def arrival_at_height(self, height, dir="ANY"):
         """ Returns if and when the ball arrives at a given height. The dir argument can be set to a string
@@ -160,6 +185,14 @@ class DropshotBall(Ball):
             print("Limit was reached!")
 
         return self
+
+    def next_landing(self):
+        ball = DropshotBall(self)
+        landing = ball.arrival_at_height(DropshotBall.RADIUS, "DOWN")
+        t = landing.time if landing.happens else 0
+        pos = ball.step_ds(t).pos
+        return UncertainEvent(landing.happens, t, data=pos)
+
 
 
 class Wall:

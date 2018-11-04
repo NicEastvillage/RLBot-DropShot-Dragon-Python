@@ -33,7 +33,7 @@ class UtilitySystem:
         self.current_best_index = -1
 
 
-class AtbaChoice:
+class Atba:
     def __init__(self, bot):
         pass
 
