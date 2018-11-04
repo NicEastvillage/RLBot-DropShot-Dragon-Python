@@ -10,6 +10,7 @@ from RLUtilities.Simulation import *
 from RLUtilities.LinearAlgebra import *
 
 import renderhelp
+from analyze import DropshotAnalyzer
 from choices import *
 from dropshot import *
 from plan import KickoffPlan
@@ -24,6 +25,7 @@ class Dragon(BaseAgent):
         self.index = index
         self.tsgn = -1 if team == 0 else 1
         self.info = DropshotInfo(index, team)
+        self.analyzer = DropshotAnalyzer()
         self.controls = SimpleControllerState()
         self.plan = None
         self.doing_kickoff = False
@@ -35,6 +37,7 @@ class Dragon(BaseAgent):
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         self.info.read_packet(packet)
+        self.analyzer.read_info(self.info)
         self.renderer.begin_rendering()
 
         # Check kickoff
