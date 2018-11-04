@@ -35,15 +35,13 @@ class UtilitySystem:
 
 class AtbaChoice:
     def __init__(self, bot):
-        self.drive = Drive(bot.info.my_car, vec3(0, 0, 0), 0)
+        pass
 
     def utility(self, bot):
         return 0.5
 
     def execute(self, bot):
         bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Atba", bot.renderer.white())
-        self.drive.car = bot.info.my_car
-        self.drive.target_pos = bot.info.ball.pos
-        self.drive.target_speed = 1500
-        self.drive.step(0.01666)
-        bot.controls = self.drive.controls
+        drive = Drive(bot.info.my_car, bot.info.ball.pos, 1500)
+        drive.step(0.01666)
+        bot.controls = drive.controls

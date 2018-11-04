@@ -12,9 +12,9 @@ def clamp01(v):
     return v
 
 
-class DefensiveWait():
+class DefensiveWait:
     def __init__(self, bot):
-        self.drive = Drive(bot.info.my_car, vec3(0, 0, 0), 0)
+        pass
 
     def utility(self, bot):
         # The more the ball is on the enemy side in 3 seconds the more likely it is to DefWait
@@ -32,8 +32,6 @@ class DefensiveWait():
 
         bot.renderer.draw_line_3d(bot.info.my_car.pos, target, bot.renderer.yellow())
 
-        self.drive.car = bot.info.my_car
-        self.drive.target_pos = target
-        self.drive.target_speed = speed
-        self.drive.step(0.016666)
-        bot.controls = self.drive.controls
+        drive = Drive(bot.info.my_car, target, speed)
+        drive.step(0.016666)
+        bot.controls = drive.controls
