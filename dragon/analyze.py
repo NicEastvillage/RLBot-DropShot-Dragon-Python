@@ -21,7 +21,7 @@ class DropshotAnalyzer:
         car_to_ball = info.ball.pos - info.my_car.pos
         best_score = -1
         best_dir = None
-        offset = 70 * info.my_car.team
+        offset = 70 * (1 - info.my_car.team)
         for tile in info.tile_list[offset:70 + offset]:
             ball_to_tile = tile.location - info.ball.pos
             ang = angle_between(car_to_ball, ball_to_tile)
