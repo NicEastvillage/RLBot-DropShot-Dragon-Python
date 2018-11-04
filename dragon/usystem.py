@@ -1,3 +1,4 @@
+from RLUtilities.LinearAlgebra import vec3
 from RLUtilities.Maneuvers import Drive
 
 
@@ -33,19 +34,16 @@ class UtilitySystem:
 
 
 class AtbaChoice:
-    def __init__(self):
-        self.drive = None
-        pass
+    def __init__(self, bot):
+        self.drive = Drive(bot.info.my_car, vec3(0, 0, 0), 0)
 
     def utility(self, bot):
-        return 1
+        return 0.5
 
     def execute(self, bot):
-        if self.drive == None:
-            self.drive = Drive(bot.info.my_car, bot.info.ball.pos, 1410)
+        bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Atba", bot.renderer.white())
+        self.drive.car = bot.info.my_car
         self.drive.target_pos = bot.info.ball.pos
-        bot.action = self.drive
-        bot.action.step(0.01666)
-        bot.controls = bot.action.controls
-        return True
-
+        self.drive.target_speed = 1500
+        self.drive.step(0.01666)
+        bot.controls = self.drive.controls
