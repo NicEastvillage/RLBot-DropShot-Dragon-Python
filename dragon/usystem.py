@@ -19,17 +19,21 @@ class UtilitySystem:
                 best_score = score
                 best_index = i
 
-        if best_index != self.current_best_index and self.current_best_index != -1:
-            # Check if choice has a reset method, then call it
-            reset_method = getattr(self.choices[self.current_best_index], "reset", None)
-            if callable(reset_method):
-                reset_method()
+        if best_index != self.current_best_index:
+            self.reset_current()
 
         # New choice
         self.current_best_index = best_index
         return self.choices[self.current_best_index], best_score
 
+    def reset_current(self):
+        if self.current_best_index != -1:
+            reset_method = getattr(self.choices[self.current_best_index], "reset", None)
+            if callable(reset_method):
+                reset_method()
+
     def reset(self):
+        self.reset_current()
         self.current_best_index = -1
 
 

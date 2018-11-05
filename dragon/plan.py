@@ -1,4 +1,4 @@
-from RLUtilities.Maneuvers import Drive, Aerial
+from RLUtilities.Maneuvers import *
 from RLUtilities.LinearAlgebra import *
 
 from dropshot import DropshotBall
@@ -67,3 +67,20 @@ class KickoffPlan:
         bot.controls = self.action.controls
         self.finished = not bot.info.is_kickoff
         return self.finished
+
+
+class DodgeTowardsPlan:
+    def __init__(self, target, jump_duration=0.1):
+        self.target = target
+        self.jump_duration = jump_duration
+        self.dodge = None
+        self.finished = False
+
+    def execute(self, bot):
+        if self.dodge == None:
+            self.dodge = AirDodge(bot.info.my_car, self.jump_duration, self.target)
+
+        self.dodge.step(0.016666)
+        bot.controls = self.dodge.controls
+        self.finished = self.dodge.finished
+        return self.dodge.finished

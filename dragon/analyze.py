@@ -8,8 +8,8 @@ class DropshotAnalyzer:
 
     TILE_FOCUS_WEIGHTS = {
         Tile.UNKNOWN: 0,
-        Tile.FILLED: 0.1,
-        Tile.DAMAGED: 0.4,
+        Tile.FILLED: 0.3,
+        Tile.DAMAGED: 0.6,
         Tile.OPEN: 1.0
     }
 
