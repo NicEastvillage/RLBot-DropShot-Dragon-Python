@@ -25,7 +25,7 @@ class DefensiveWait:
         ball_pos = bot.info.ball.pos
         target = vec3(ball_pos[0], -ball_pos[1], 0)
         distance = norm(target - bot.info.my_car.pos)
-        speed = distance / 3
+        speed = min(1410, distance / 3)
 
         bot.renderer.draw_line_3d(bot.info.my_car.pos, target, bot.renderer.yellow())
 
@@ -40,14 +40,19 @@ class AirDrag:
         self.flick_timer = 0
 
         # Constants
+        self.drive = Drive(None, None, 0)
         self.extra_utility_bias = 0.2
         self.wait_before_flick = 0.18
         self.flick_init_jump_duration = 0.07
-        self.required_distance_to_ball_for_flick = 185
+        self.required_distance_to_ball_for_flick = 180
         self.offset_bias = 35
 
     def utility(self, bot):
         car_to_ball = bot.info.my_car.pos - bot.info.ball.pos
+
+        bouncing_b = bot.info.ball.pos[2] > 130 or abs(bot.info.ball.vel[2]) > 300
+        if not bouncing_b:
+            return 0
 
         dist_01 = rlmath.clamp01(1 - norm(car_to_ball) / 3000)
 
@@ -61,15 +66,18 @@ class AirDrag:
         protect_tile_b = (tile != None and tile.team == bot.team and
                           (tile.state == tiles.Tile.OPEN or bot.info.ball.team != bot.team))
 
-        return rlmath.clamp01(0.1 + 0.3 * on_my_side_b + 0.3 * ang_01 + 0.3 * dist_01 + 0.8 * protect_tile_b + self.is_dribbling * self.extra_utility_bias)
+
+
+        return rlmath.clamp01(0.3 * on_my_side_b + 0.3 * ang_01 + 0.3 * dist_01 + 0.8 * protect_tile_b + self.is_dribbling * self.extra_utility_bias)
 
     def execute(self, bot):
-        bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Dribble", bot.renderer.purple())
+        bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "AirDrag", bot.renderer.purple())
         self.is_dribbling = True
 
         ball_landing = bot.info.ball.next_landing()
         tile = tiles.point_to_tile(bot.info, ball_landing.data)
 
+        # Decide on target pos and speed
         if tile != None and tile.team != bot.team and tile.state == tiles.Tile.OPEN:
             # It will hit enemy open tile - so don't save
             target = ball_landing.data
@@ -79,6 +87,7 @@ class AirDrag:
             dist = norm(target - bot.info.my_car.pos)
             speed = 1400 if ball_landing.time == 0 else dist / ball_landing.time
 
+        # Do a flick?
         car_to_ball = bot.info.ball.pos - bot.info.my_car.pos
         dist = norm(car_to_ball)
         if dist <= self.required_distance_to_ball_for_flick:
@@ -88,10 +97,54 @@ class AirDrag:
         else:
             self.flick_timer = 0
 
-        drive = Drive(bot.info.my_car, target, speed)
-        drive.step(0.016666)
-        bot.controls = drive.controls
+        self.drive.car = bot.info.my_car
+        self.drive.target_pos = target
+        self.drive.target_speed = speed
+        self.drive.step(0.016666)
+        bot.controls = self.drive.controls
 
     def reset(self):
         self.is_dribbling = False
         self.flick_timer = 0
+
+
+class Dribble:
+    def __init__(self, bot):
+        self.drive = Drive(None, None, 0)
+
+    def utility(self, bot):
+        ball_height_01 = (bot.info.ball.pos[2] - 100) / 500
+        ball_vert_vel_01 = abs(bot.info.ball.vel[2]) / 500
+        return max(0, 0.65 - 0.5 * ball_height_01 - 0.2 * ball_vert_vel_01)
+
+    def execute(self, bot):
+        bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Dribble", bot.renderer.pink())
+
+        ball = bot.info.ball
+        car = bot.info.my_car
+        aim = bot.analyzer.best_target_tile.location
+
+        car_to_ball = ball.pos - car.pos
+        ctb_n = normalize(car_to_ball)
+        dist = norm(car_to_ball) - 100
+        vel_delta = ball.vel - car.vel
+        vel_d = norm(vel_delta)
+        time = max(0, dist / (1.5 * vel_d)) if vel_d != 0 else 0
+        bvel = norm(ball.vel)
+
+        ball_to_aim_n = normalize(aim - ball.pos)
+
+        nbp = DropshotBall(ball).step_ds(time).pos
+        target = nbp - 120 * ball_to_aim_n
+        dist_t = norm(target - car.pos)
+        speed = min(rlmath.lerp(1.3 * bvel, 2300, dist_t / 1000), 2300)
+
+        bot.renderer.draw_line_3d(ball.pos, nbp, bot.renderer.green())
+        bot.renderer.draw_rect_3d(nbp, 10, 10, True, bot.renderer.green())
+        bot.renderer.draw_rect_3d(target, 10, 10, True, bot.renderer.pink())
+
+        self.drive.car = bot.info.my_car
+        self.drive.target_pos = target
+        self.drive.target_speed = speed
+        self.drive.step(0.016666)
+        bot.controls = self.drive.controls

@@ -30,9 +30,9 @@ class Dragon(BaseAgent):
         self.plan = None
         self.doing_kickoff = False
         self.ut = UtilitySystem([
-            Atba(self),
             DefensiveWait(self),
-            AirDrag(self)
+            AirDrag(self),
+            Dribble(self)
         ])
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
