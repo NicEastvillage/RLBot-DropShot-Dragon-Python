@@ -17,13 +17,19 @@ class DefensiveWait:
         # The more the ball is on the enemy side in 3 seconds the more likely it is to DefWait
         ball_3_sec_pos = DropshotBall(bot.info.ball).step_ds(3.0).pos
         ball_side_01 = 1 / (1 + 2 ** (bot.tsgn * ball_3_sec_pos[1] / 400))
-        return rlmath.clamp01(0.7 * ball_side_01)
+        return rlmath.clamp01(0.7 * ball_side_01 - 0.55 * bot.analyzer.team_mate_is_defensive_01)
 
     def execute(self, bot):
         bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "DefWait", bot.renderer.yellow())
 
         ball_pos = bot.info.ball.pos
         target = vec3(ball_pos[0], -ball_pos[1], 0)
+        target = rlmath.lerp(target, vec3(0, 0, 0), bot.analyzer.team_mate_is_defensive_01)
+
+        for car in bot.info.teammates:
+            to_me_n = normalize(bot.info.my_car.pos - car.pos)
+            target += to_me_n * 400
+
         distance = norm(target - bot.info.my_car.pos)
         speed = min(1410, distance / 3)
 
@@ -68,7 +74,12 @@ class AirDrag:
 
 
 
-        return rlmath.clamp01(0.3 * on_my_side_b + 0.3 * ang_01 + 0.3 * dist_01 + 0.8 * protect_tile_b + self.is_dribbling * self.extra_utility_bias)
+        return rlmath.clamp01(0.3 * on_my_side_b
+                              + 0.3 * ang_01
+                              + 0.3 * dist_01
+                              + 0.8 * protect_tile_b
+                              - 0.3 * bot.analyzer.team_mate_has_ball_01
+                              + self.is_dribbling * self.extra_utility_bias)
 
     def execute(self, bot):
         bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "AirDrag", bot.renderer.purple())
@@ -115,7 +126,10 @@ class Dribble:
     def utility(self, bot):
         ball_height_01 = (bot.info.ball.pos[2] - 100) / 500
         ball_vert_vel_01 = abs(bot.info.ball.vel[2]) / 500
-        return max(0, 0.65 - 0.5 * ball_height_01 - 0.2 * ball_vert_vel_01)
+        return max(0, 0.65
+                   - 0.5 * ball_height_01
+                   - 0.2 * ball_vert_vel_01
+                   - 0.3 * bot.analyzer.team_mate_has_ball_01)
 
     def execute(self, bot):
         bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Dribble", bot.renderer.pink())
