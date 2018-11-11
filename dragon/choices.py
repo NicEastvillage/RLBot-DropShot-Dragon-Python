@@ -11,6 +11,7 @@ from plan import DodgeTowardsPlan, AerialPlan
 
 class DefensiveWait:
     def __init__(self, bot):
+        self.drive = Drive(None, None, 0)
         pass
 
     def utility(self, bot):
@@ -30,14 +31,21 @@ class DefensiveWait:
             to_me_n = normalize(bot.info.my_car.pos - car.pos)
             target += to_me_n * 400
 
-        distance = norm(target - bot.info.my_car.pos)
-        speed = min(1410, distance / 3)
-
         bot.renderer.draw_line_3d(bot.info.my_car.pos, target, bot.renderer.yellow())
 
-        drive = Drive(bot.info.my_car, target, speed)
-        drive.step(0.016666)
-        bot.controls = drive.controls
+        distance = norm(target - bot.info.my_car.pos)
+        if distance > 2000:
+            ctt_n = normalize(target - bot.info.my_car.pos)
+            vtt = dot(bot.info.my_car.vel, ctt_n) / dot(ctt_n, ctt_n)
+            if vtt > 750:
+                bot.plan = DodgeTowardsPlan(target)
+
+        speed = min(1410, distance / 3)
+        self.drive.car = bot.info.my_car
+        self.drive.target_pos = target
+        self.drive.target_speed = speed
+        self.drive.step(0.016666)
+        bot.controls = self.drive.controls
 
 
 class AirDrag:
@@ -72,8 +80,6 @@ class AirDrag:
         protect_tile_b = (tile != None and tile.team == bot.team and
                           (tile.state == tiles.Tile.OPEN or bot.info.ball.team != bot.team))
 
-
-
         return rlmath.clamp01(0.3 * on_my_side_b
                               + 0.3 * ang_01
                               + 0.3 * dist_01
@@ -107,6 +113,13 @@ class AirDrag:
                 bot.plan = DodgeTowardsPlan(bot.analyzer.best_target_tile.location, self.flick_init_jump_duration)
         else:
             self.flick_timer = 0
+
+            # dodge on far distances
+            if dist > 2300 and speed > 1410:
+                ctt_n = normalize(target - bot.info.my_car.pos)
+                vtt = dot(bot.info.my_car.vel, ctt_n) / dot(ctt_n, ctt_n)
+                if vtt > 750:
+                    bot.plan = DodgeTowardsPlan(target)
 
         self.drive.car = bot.info.my_car
         self.drive.target_pos = target
