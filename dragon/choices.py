@@ -1,7 +1,8 @@
 import math
 
 from RLUtilities.LinearAlgebra import *
-from RLUtilities.Maneuvers import Drive, Aerial
+from RLUtilities.Maneuvers import Drive, Aerial, AerialTurn
+from rlbot.agents.base_agent import SimpleControllerState
 
 import tiles
 import rlmath
@@ -179,8 +180,8 @@ class Dribble:
 
 class QuickAerial:
     def __init__(self, bot):
-        self.aerial = Aerial(None, None, 0)
-        self.drive = Drive(None, None, 0)
+        self.aerial = None
+        self.drive = None
         pass
 
     def utility(self, bot):
@@ -207,6 +208,7 @@ class QuickAerial:
     def execute(self, bot):
         bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Aerial", bot.renderer.red())
 
+        self.aerial = Aerial(bot.info.my_car, vec3(0, 0, 0), 0)
         ball = DropshotBall(bot.info.ball)
 
         for i in range(60):
@@ -224,8 +226,26 @@ class QuickAerial:
         if self.aerial.is_viable():
             bot.plan = AerialPlan(bot.info.my_car, self.aerial.target, self.aerial.t_arrival)
 
-        self.drive.car = bot.info.my_car
-        self.drive.target_pos = bot.info.ball.pos
-        self.drive.target_speed = 2300
+        self.drive = Drive(bot.info.my_car, bot.info.ball.pos, 2300)
         self.drive.step(0.016666)
         bot.controls = self.drive.controls
+
+
+class FixOrientation:
+    def __init__(self, bot):
+        self.aerial_turn = None
+
+    def utility(self, bot):
+        return not bot.info.my_car.on_ground
+
+    def execute(self, bot):
+        bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Recovery", bot.renderer.blue())
+
+        if self.aerial_turn == None:
+            self.aerial_turn = AerialTurn(bot.info.my_car)
+
+        self.aerial_turn.step(0.016666)
+        bot.controls = self.aerial_turn.controls
+
+    def reset(self):
+        self.aerial_turn = None

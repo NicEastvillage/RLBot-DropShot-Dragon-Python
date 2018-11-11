@@ -32,7 +32,9 @@ class Dragon(BaseAgent):
         self.ut = UtilitySystem([
             DefensiveWait(self),
             AirDrag(self),
-            Dribble(self)
+            Dribble(self),
+            QuickAerial(self),
+            FixOrientation(self)
         ])
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
