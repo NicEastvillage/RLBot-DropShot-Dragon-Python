@@ -1,12 +1,12 @@
 import math
 
 from RLUtilities.LinearAlgebra import *
-from RLUtilities.Maneuvers import Drive
+from RLUtilities.Maneuvers import Drive, Aerial
 
 import tiles
 import rlmath
 from dropshot import DropshotBall
-from plan import DodgeTowardsPlan
+from plan import DodgeTowardsPlan, AerialPlan
 
 
 class DefensiveWait:
@@ -160,5 +160,59 @@ class Dribble:
         self.drive.car = bot.info.my_car
         self.drive.target_pos = target
         self.drive.target_speed = speed
+        self.drive.step(0.016666)
+        bot.controls = self.drive.controls
+
+
+class QuickAerial:
+    def __init__(self, bot):
+        self.aerial = Aerial(None, None, 0)
+        self.drive = Drive(None, None, 0)
+        pass
+
+    def utility(self, bot):
+        ball = bot.info.ball
+        if ball.pos[2] < 1000:
+            return 0
+
+        car = bot.info.my_car
+        if car.boost < 30:
+            return 0
+
+        car_to_ball = ball.pos - car.pos
+        ctb_flat = vec3(car_to_ball[0], car_to_ball[1], 0)
+        ang = angle_between(ctb_flat, car.forward())
+        if ang > 1:
+            return 0
+
+        vf = norm(car.vel)
+        if vf < 800:
+            return 0
+
+        return 0.8
+
+    def execute(self, bot):
+        bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Aerial", bot.renderer.red())
+
+        ball = DropshotBall(bot.info.ball)
+
+        for i in range(60):
+            ball.step_ds(0.016666)
+            self.aerial.target = ball.pos
+            self.aerial.t_arrival = ball.t
+            # Check if we can reach it by an aerial
+            if self.aerial.is_viable():
+                # One more step
+                ball.step_ds(0.016666)
+                self.aerial.target = ball.pos + vec3(0, 0, 15)
+                self.aerial.t_arrival = ball.t
+                break
+
+        if self.aerial.is_viable():
+            bot.plan = AerialPlan(bot.info.my_car, self.aerial.target, self.aerial.t_arrival)
+
+        self.drive.car = bot.info.my_car
+        self.drive.target_pos = bot.info.ball.pos
+        self.drive.target_speed = 2300
         self.drive.step(0.016666)
         bot.controls = self.drive.controls

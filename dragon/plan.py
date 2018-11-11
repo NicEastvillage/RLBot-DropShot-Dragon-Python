@@ -84,3 +84,15 @@ class DodgeTowardsPlan:
         bot.controls = self.dodge.controls
         self.finished = self.dodge.finished
         return self.dodge.finished
+
+
+class AerialPlan:
+    def __init__(self, car, pos, arrival_t, up=vec3(0, 0, 1)):
+        self.aerial = Aerial(car, pos, arrival_t, up)
+        self.finished = False
+
+    def execute(self, bot):
+        self.aerial.step(0.016666)
+        bot.controls = self.aerial.controls
+        self.finished = self.aerial.finished
+        return self.finished
