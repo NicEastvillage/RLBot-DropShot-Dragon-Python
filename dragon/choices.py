@@ -140,10 +140,24 @@ class Dribble:
     def utility(self, bot):
         ball_height_01 = (bot.info.ball.pos[2] - 100) / 500
         ball_vert_vel_01 = abs(bot.info.ball.vel[2]) / 500
+        if self.is_near_wall(bot.info.ball.pos):
+            ball_height_01 = -1
         return max(0, 0.65
                    - 0.5 * ball_height_01
                    - 0.2 * ball_vert_vel_01
                    - 0.3 * bot.analyzer.team_mate_has_ball_01)
+
+    def is_near_wall(self, ball_pos):
+        TO_WALL = 4555 - 135
+        TO_CORNER = 5100  # (4555 -135) / math.sin(60)
+
+        ax = abs(ball_pos[0])
+        ay = abs(ball_pos[1])
+
+        if TO_CORNER < ax or TO_WALL < ay:
+            return True
+
+        return TO_WALL * TO_CORNER - TO_WALL * ax - 0.5 * TO_CORNER * ay < 0
 
     def execute(self, bot):
         bot.renderer.draw_string_3d(bot.info.my_car.pos, 1, 1, "Dribble", bot.renderer.pink())
