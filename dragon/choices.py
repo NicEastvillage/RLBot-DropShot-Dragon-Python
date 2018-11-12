@@ -260,6 +260,7 @@ class FixOrientation:
 
         self.aerial_turn.step(0.016666)
         bot.controls = self.aerial_turn.controls
+        bot.controls.throttle = 1
 
     def reset(self):
         self.aerial_turn = None

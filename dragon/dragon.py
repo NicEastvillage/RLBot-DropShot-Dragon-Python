@@ -59,8 +59,6 @@ class Dragon(BaseAgent):
             self.plan.execute(self)
 
         # Rendering
-        if self.team == 0:
-            draw_ball_trajectory(self)
         self.renderer.draw_line_3d(self.info.ball.pos, self.analyzer.best_target_tile.location, self.renderer.team_color(self.team))
         renderhelp.highlight_tile_more(self.renderer, self.analyzer.best_target_tile, self.renderer.team_color(self.team))
 
